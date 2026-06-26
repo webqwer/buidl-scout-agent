@@ -1,5 +1,6 @@
 import { buildScoutReport } from "../domain/scoring.js";
 import { ScoutInputSchema, type ScoutInput, type ScoutReport } from "../domain/types.js";
+import { maybeRefineReport } from "../llm/openaiRefiner.js";
 import { buildFallbackFacts, extractFactsFromHtml } from "./extract.js";
 
 export async function createScoutReport(input: ScoutInput): Promise<ScoutReport> {
@@ -15,7 +16,8 @@ export async function createScoutReport(input: ScoutInput): Promise<ScoutReport>
       })
     : buildFallbackFacts(parsed.url, parsed.builderProfile, parsed.constraints);
 
-  return buildScoutReport(facts);
+  const report = buildScoutReport(facts);
+  return parsed.useOpenAI ? maybeRefineReport(report) : report;
 }
 
 export function formatReportAsMarkdown(report: ScoutReport): string {
