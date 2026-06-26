@@ -1,0 +1,26 @@
+{
+  "name": "buidl-scout-agent",
+  "version": "0.1.0",
+  "description": "A CROO-compatible paid agent that evaluates hackathon and bounty links for builders.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "scout": "tsx src/cli.ts",
+    "provider": "tsx src/croo/provider.ts"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "openai": "^6.9.1",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}
