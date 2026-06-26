@@ -4,6 +4,9 @@
   "description": "A CROO-compatible paid agent that evaluates hackathon and bounty links for builders.",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
