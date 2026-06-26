@@ -48,7 +48,7 @@ export const ScoutReportSchema = z.object({
   ).default([])
 });
 
-export type ScoutInput = z.infer<typeof ScoutInputSchema>;
+export type ScoutInput = z.input<typeof ScoutInputSchema>;
 export type ScoutFacts = z.infer<typeof ScoutFactsSchema>;
 export type ScoutRisk = z.infer<typeof ScoutRiskSchema>;
 export type ScoutReport = z.infer<typeof ScoutReportSchema>;

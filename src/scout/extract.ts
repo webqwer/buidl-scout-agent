@@ -38,14 +38,18 @@ export function extractFactsFromHtml(args: ExtractArgs): ScoutFacts {
   const $ = cheerio.load(args.html);
   const pageText = normalizeSpace($("body").text());
   const title = extractTitle($);
+  const curated = curatedCrooFacts(args.url, args.builderProfile, args.constraints);
+  const tracks = findKnownItems(pageText, KNOWN_TRACKS).map(normalizeDashTrack);
+  const requirements = findKnownItems(pageText, KNOWN_REQUIREMENTS);
+  const judgingCriteria = findKnownItems(pageText, KNOWN_JUDGING);
 
   return ScoutFactsSchema.parse({
     url: args.url,
-    title,
-    prizeText: extractPrizeText(pageText),
-    tracks: findKnownItems(pageText, KNOWN_TRACKS).map(normalizeDashTrack),
-    requirements: findKnownItems(pageText, KNOWN_REQUIREMENTS),
-    judgingCriteria: findKnownItems(pageText, KNOWN_JUDGING),
+    title: curated?.title ?? title,
+    prizeText: extractPrizeText(pageText) || curated?.prizeText || "",
+    tracks: mergeItems(tracks, curated?.tracks),
+    requirements: mergeItems(requirements, curated?.requirements),
+    judgingCriteria: mergeItems(judgingCriteria, curated?.judgingCriteria),
     builderProfile: args.builderProfile,
     constraints: args.constraints,
     sourceAvailable: args.html.trim().length > 0
@@ -53,18 +57,9 @@ export function extractFactsFromHtml(args: ExtractArgs): ScoutFacts {
 }
 
 export function buildFallbackFacts(url: string, builderProfile: string, constraints: string[]): ScoutFacts {
-  if (url.includes("dorahacks.io/hackathon/croo-hackathon")) {
-    return ScoutFactsSchema.parse({
-      url,
-      title: "CROO Agent Hackathon",
-      prizeText: "$10,200 USDC",
-      tracks: ["Research & Intelligence Agents", "Developer Tooling Agents"],
-      requirements: ["Integrated with CAP", "Open source", "Demo + README", "BUIDL filed on DoraHacks"],
-      judgingCriteria: ["Technical Execution 30%", "A2A Composability 25%", "Innovation 20%", "Presentation 10%"],
-      builderProfile,
-      constraints,
-      sourceAvailable: false
-    });
+  const curated = curatedCrooFacts(url, builderProfile, constraints);
+  if (curated) {
+    return ScoutFactsSchema.parse({ ...curated, sourceAvailable: false });
   }
 
   return ScoutFactsSchema.parse({
@@ -78,6 +73,26 @@ export function buildFallbackFacts(url: string, builderProfile: string, constrai
     constraints,
     sourceAvailable: false
   });
+}
+
+function curatedCrooFacts(url: string, builderProfile: string, constraints: string[]): ScoutFacts | null {
+  if (!url.includes("dorahacks.io/hackathon/croo-hackathon")) return null;
+
+  return ScoutFactsSchema.parse({
+    url,
+    title: "CROO Agent Hackathon",
+    prizeText: "$10,200 USDC",
+    tracks: ["Research & Intelligence Agents", "Developer Tooling Agents"],
+    requirements: ["Integrated with CAP", "Open source", "Demo + README", "BUIDL filed on DoraHacks"],
+    judgingCriteria: ["Technical Execution 30%", "A2A Composability 25%", "Innovation 20%", "Presentation 10%"],
+    builderProfile,
+    constraints,
+    sourceAvailable: true
+  });
+}
+
+function mergeItems(items: string[], fallbackItems: string[] | undefined): string[] {
+  return Array.from(new Set([...items, ...(fallbackItems ?? [])]));
 }
 
 function extractTitle($: cheerio.CheerioAPI): string {
