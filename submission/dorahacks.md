@@ -65,11 +65,15 @@ This service is useful as a dependency for other agents. A planning agent, inves
 
 ## Repository URL
 
-Publish `D:\xxzl\buidl-scout-agent` as a public GitHub repository and paste the final URL into the DoraHacks form.
+https://github.com/webqwer/buidl-scout-agent
 
 ## Demo Video URL
 
 Record the walkthrough using `submission/demo-script.md`, upload it, and paste the final URL into the DoraHacks form.
+
+## CROO Agent Store URL
+
+After registering the agent and service at https://agent.croo.network, paste the public listing URL into the DoraHacks form.
 
 ## License
 
