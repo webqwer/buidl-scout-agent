@@ -53,6 +53,20 @@ export function extractFactsFromHtml(args: ExtractArgs): ScoutFacts {
 }
 
 export function buildFallbackFacts(url: string, builderProfile: string, constraints: string[]): ScoutFacts {
+  if (url.includes("dorahacks.io/hackathon/croo-hackathon")) {
+    return ScoutFactsSchema.parse({
+      url,
+      title: "CROO Agent Hackathon",
+      prizeText: "$10,200 USDC",
+      tracks: ["Research & Intelligence Agents", "Developer Tooling Agents"],
+      requirements: ["Integrated with CAP", "Open source", "Demo + README", "BUIDL filed on DoraHacks"],
+      judgingCriteria: ["Technical Execution 30%", "A2A Composability 25%", "Innovation 20%", "Presentation 10%"],
+      builderProfile,
+      constraints,
+      sourceAvailable: false
+    });
+  }
+
   return ScoutFactsSchema.parse({
     url,
     title: titleFromUrl(url),

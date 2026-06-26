@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
-import { extractFactsFromHtml } from "../../src/scout/extract.js";
+import { buildFallbackFacts, extractFactsFromHtml } from "../../src/scout/extract.js";
 import { createScoutReport } from "../../src/scout/report.js";
 
 describe("scout report generation", () => {
@@ -29,5 +29,14 @@ describe("scout report generation", () => {
 
     expect(report.decision).toBe("go");
     expect(report.sources[0]?.url).toBe("https://dorahacks.io/hackathon/croo-hackathon");
+  });
+
+  it("uses curated CROO facts when the official event page cannot be fetched", () => {
+    const facts = buildFallbackFacts("https://dorahacks.io/hackathon/croo-hackathon", "solo TypeScript builder", []);
+
+    expect(facts.title).toBe("CROO Agent Hackathon");
+    expect(facts.tracks).toContain("Research & Intelligence Agents");
+    expect(facts.requirements).toContain("Integrated with CAP");
+    expect(facts.sourceAvailable).toBe(false);
   });
 });

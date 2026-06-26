@@ -20,8 +20,8 @@ export async function createScoutReport(input: ScoutInput): Promise<ScoutReport>
 
 export function formatReportAsMarkdown(report: ScoutReport): string {
   const risks = report.risks.length
-    ? report.risks.map((risk) => `- **${risk.level.toUpperCase()}** ${risk.title}: ${risk.mitigation}`).join("\n")
-    : "- No major risks identified.";
+    ? report.risks.map((risk) => `- **${risk.level.toUpperCase()}** ${risk.title}: ${risk.mitigation}`)
+    : ["- No major risks identified."];
 
   return [
     "# BUIDL Scout Report",
@@ -41,7 +41,7 @@ export function formatReportAsMarkdown(report: ScoutReport): string {
     ...(report.tracks.length ? report.tracks.map((track) => `- ${track}`) : ["- No clear track match found."]),
     "",
     "## Risks",
-    risks,
+    ...risks,
     "",
     "## Checklist",
     ...report.checklist.map((item) => `- ${item}`),
