@@ -7,6 +7,11 @@ type DeliveringClient = {
   deliverOrder(orderId: string, payload: unknown): Promise<unknown>;
 };
 
+type OrderLookupClient = {
+  getOrder(orderId: string): Promise<{ negotiationId?: string; negotiation_id?: string; request?: unknown; metadata?: unknown }>;
+  getNegotiation(negotiationId: string): Promise<{ requirements?: unknown; metadata?: unknown }>;
+};
+
 type PaidOrderArgs = {
   client: DeliveringClient;
   orderId: string;
@@ -20,16 +25,18 @@ type CrooRuntimeConfig = {
   sdkKey: string;
 };
 
+type LoggerLike = Pick<typeof console, "debug" | "error" | "info" | "warn">;
+
 export async function handlePaidOrder(args: PaidOrderArgs): Promise<ScoutReport> {
-  const request = ScoutInputSchema.omit({ html: true, useOpenAI: true }).parse(args.request);
+  const request = ScoutInputSchema.omit({ html: true, useOpenAI: true }).parse(parseRequestPayload(args.request));
   const report = await createScoutReport({
     ...request,
     html: args.html
   });
 
   await args.client.deliverOrder(args.orderId, {
-    type: "schema",
-    data: report
+    deliverableType: "schema",
+    deliverableText: JSON.stringify(report)
   });
 
   return report;
@@ -41,7 +48,7 @@ export async function startCrooProvider(config = readCrooConfig()): Promise<void
     {
       baseURL: config.apiUrl,
       wsURL: config.wsUrl,
-      logger: console
+      logger: createRedactingLogger(console)
     },
     config.sdkKey
   );
@@ -85,6 +92,40 @@ function readCrooConfig(): CrooRuntimeConfig {
   };
 }
 
+function parseRequestPayload(payload: unknown): unknown {
+  if (typeof payload !== "string") return payload;
+  try {
+    return JSON.parse(payload);
+  } catch {
+    return payload;
+  }
+}
+
+function createRedactingLogger(logger: LoggerLike): LoggerLike {
+  return {
+    debug: (message?: unknown, ...args: unknown[]) => logger.debug(redactSecrets(message), ...args.map(redactSecrets)),
+    error: (message?: unknown, ...args: unknown[]) => logger.error(redactSecrets(message), ...args.map(redactSecrets)),
+    info: (message?: unknown, ...args: unknown[]) => logger.info(redactSecrets(message), ...args.map(redactSecrets)),
+    warn: (message?: unknown, ...args: unknown[]) => logger.warn(redactSecrets(message), ...args.map(redactSecrets))
+  };
+}
+
+function redactSecrets(value: unknown): unknown {
+  if (typeof value === "string") {
+    return value.replace(/croo_sk_[A-Za-z0-9]+/g, "croo_sk_****");
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(redactSecrets);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, redactSecrets(entry)]));
+  }
+
+  return value;
+}
+
 async function loadCrooSdk(): Promise<any> {
   try {
     const moduleName = "@croo-network/sdk";
@@ -94,11 +135,17 @@ async function loadCrooSdk(): Promise<any> {
   }
 }
 
-async function readOrderRequest(client: { getOrder?: (orderId: string) => Promise<{ request?: unknown; metadata?: unknown }> }, orderId: string): Promise<unknown> {
-  const order = await client.getOrder?.(orderId);
-  const request = order?.request ?? order?.metadata;
+async function readOrderRequest(client: OrderLookupClient, orderId: string): Promise<unknown> {
+  const order = await client.getOrder(orderId);
+  const negotiationId = order.negotiationId ?? order.negotiation_id;
+  if (!negotiationId) {
+    throw new Error("Order did not include a negotiation id.");
+  }
+
+  const negotiation = await client.getNegotiation(negotiationId);
+  const request = negotiation.requirements ?? negotiation.metadata ?? order.request ?? order.metadata;
   if (!request) {
-    throw new Error("Order request payload was not available from the CROO event or order lookup.");
+    throw new Error("Order request payload was not available from the CROO negotiation or order lookup.");
   }
   return request;
 }

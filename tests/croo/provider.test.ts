@@ -23,7 +23,32 @@ describe("handlePaidOrder", () => {
     });
 
     expect(deliveries).toHaveLength(1);
-    expect(JSON.stringify(deliveries[0])).toContain("go");
+    expect(deliveries[0]).toMatchObject({ deliverableType: "schema" });
+    expect(JSON.parse((deliveries[0] as { deliverableText: string }).deliverableText).decision).toBe("go");
+  });
+
+  it("accepts a JSON string request from CROO negotiation requirements", async () => {
+    const deliveries: unknown[] = [];
+    const client = {
+      deliverOrder: async (_orderId: string, payload: unknown) => {
+        deliveries.push(payload);
+        return { ok: true };
+      }
+    };
+
+    await handlePaidOrder({
+      client,
+      orderId: "order-2",
+      request: JSON.stringify({
+        url: "https://dorahacks.io/hackathon/croo-hackathon",
+        builderProfile: "small TypeScript team",
+        constraints: []
+      }),
+      html: "<title>CROO Agent Hackathon</title><body>CAP A2A developer tooling deadline USDC</body>"
+    });
+
+    expect(deliveries).toHaveLength(1);
+    expect(JSON.parse((deliveries[0] as { deliverableText: string }).deliverableText).score).toBeGreaterThan(0);
   });
 
   it("recognizes Windows paths for provider direct runs", () => {

@@ -16,6 +16,7 @@
     "provider": "tsx src/croo/provider.ts"
   },
   "dependencies": {
+    "@croo-network/sdk": "^0.2.1",
     "cheerio": "^1.0.0",
     "openai": "^6.9.1",
     "zod": "^4.1.13"
