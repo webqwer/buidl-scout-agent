@@ -67,11 +67,7 @@ The core report generator is deterministic and does not require external credent
 npm install
 ```
 
-The CROO SDK is dynamically loaded at provider runtime. If CROO provides the SDK package in your environment, install it before running the live provider:
-
-```bash
-npm install @croo-network/sdk
-```
+The live provider uses `@croo-network/sdk` and is installed with the project dependencies.
 
 ## Local Demo
 
@@ -140,7 +136,7 @@ The provider uses these SDK capabilities:
 - `connectWebSocket()` for CAP event listening
 - `acceptNegotiation(negotiationId)` for incoming negotiations
 - `deliverOrder(orderId, payload)` after `OrderPaid`
-- `getOrder(orderId)` as a fallback when the paid event does not include request metadata
+- `getOrder(orderId)` and `getNegotiation(negotiationId)` to resolve paid-order requirements
 
 ## Verification
 
