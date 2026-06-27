@@ -7,3 +7,6 @@ coverage/
 npm-debug.log*
 provider.log
 provider.pid
+.codex-browser-profile/
+.codex-browser-profile-copy/
+.codex-tmp/

@@ -69,7 +69,7 @@ https://github.com/webqwer/buidl-scout-agent
 
 ## Demo Video URL
 
-Record the walkthrough using `submission/demo-script.md`, upload it, and paste the final URL into the DoraHacks form.
+https://raw.githubusercontent.com/webqwer/buidl-scout-agent/main/submission/buidl-scout-demo.mp4
 
 ## CROO Agent Store URL
 
